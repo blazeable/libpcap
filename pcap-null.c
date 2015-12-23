@@ -23,7 +23,9 @@
 #include <config.h>
 #endif
 
+#ifndef _WIN32
 #include <sys/param.h>			/* optionally get BSD define */
+#endif
 
 #include <string.h>
 
@@ -59,3 +61,26 @@ pcap_platform_lib_version(void)
 {
 	return (NULL);
 }
+
+#ifdef _WIN32
+int
+pcap_wsockinit(void)
+{
+	WORD wVersionRequested;
+	WSADATA wsaData;
+	static int err = -1;
+	static int done = 0;
+
+	if (done)
+		return (err);
+
+	wVersionRequested = WINSOCK_VERSION;
+	err = WSAStartup(wVersionRequested, &wsaData);
+	atexit((void(*)(void))WSACleanup);
+	done = 1;
+
+	if (err != 0)
+		err = -1;
+	return (err);
+}
+#endif
